@@ -1,11 +1,28 @@
-import React from 'react';
-import { Card, Form, Input, Button, Typography } from 'antd';
+import React, { useState } from 'react';
+import { Card, Form, Input, Button, Typography, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const { Title } = Typography;
 
 const Login = () => {
+  const [loading, setLoading] = useState(false);
+  const { signIn } = useAuth();
+  const [form] = Form.useForm();
+
+  const handleSubmit = async (values) => {
+    try {
+      setLoading(true);
+      const { error } = await signIn(values.email, values.password);
+      if (error) throw error;
+    } catch (error) {
+      message.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div style={{ 
       display: 'flex', 
@@ -16,10 +33,17 @@ const Login = () => {
     }}>
       <Card style={{ width: 400, padding: '20px' }}>
         <Title level={2} style={{ textAlign: 'center', marginBottom: 30 }}>Login</Title>
-        <Form layout="vertical">
+        <Form 
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+        >
           <Form.Item
             name="email"
-            rules={[{ required: true, message: 'Please input your email!' }]}
+            rules={[
+              { required: true, message: 'Please input your email!' },
+              { type: 'email', message: 'Please enter a valid email!' }
+            ]}
           >
             <Input 
               prefix={<UserOutlined />} 
@@ -38,7 +62,13 @@ const Login = () => {
             />
           </Form.Item>
           <Form.Item>
-            <Button type="primary" htmlType="submit" block size="large">
+            <Button 
+              type="primary" 
+              htmlType="submit" 
+              block 
+              size="large"
+              loading={loading}
+            >
               Log in
             </Button>
           </Form.Item>

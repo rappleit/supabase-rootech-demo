@@ -1,11 +1,29 @@
-import React from 'react';
-import { Card, Form, Input, Button, Typography } from 'antd';
+import React, { useState } from 'react';
+import { Card, Form, Input, Button, Typography, message } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const { Title } = Typography;
 
 const Register = () => {
+  const [loading, setLoading] = useState(false);
+  const { signUp } = useAuth();
+  const [form] = Form.useForm();
+
+  const handleSubmit = async (values) => {
+    try {
+      setLoading(true);
+      const { error } = await signUp(values.email, values.password);
+      if (error) throw error;
+      message.success('Registration successful! Please check your email to verify your account.');
+    } catch (error) {
+      message.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div style={{ 
       display: 'flex', 
@@ -16,7 +34,11 @@ const Register = () => {
     }}>
       <Card style={{ width: 400, padding: '20px' }}>
         <Title level={2} style={{ textAlign: 'center', marginBottom: 30 }}>Register</Title>
-        <Form layout="vertical">
+        <Form 
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+        >
           <Form.Item
             name="username"
             rules={[{ required: true, message: 'Please input your username!' }]}
@@ -42,7 +64,10 @@ const Register = () => {
           </Form.Item>
           <Form.Item
             name="password"
-            rules={[{ required: true, message: 'Please input your password!' }]}
+            rules={[
+              { required: true, message: 'Please input your password!' },
+              { min: 6, message: 'Password must be at least 6 characters!' }
+            ]}
           >
             <Input.Password
               prefix={<LockOutlined />}
@@ -50,18 +75,14 @@ const Register = () => {
               size="large"
             />
           </Form.Item>
-          <Form.Item
-            name="confirmPassword"
-            rules={[{ required: true, message: 'Please confirm your password!' }]}
-          >
-            <Input.Password
-              prefix={<LockOutlined />}
-              placeholder="Confirm Password"
-              size="large"
-            />
-          </Form.Item>
           <Form.Item>
-            <Button type="primary" htmlType="submit" block size="large">
+            <Button 
+              type="primary" 
+              htmlType="submit" 
+              block 
+              size="large"
+              loading={loading}
+            >
               Register
             </Button>
           </Form.Item>
